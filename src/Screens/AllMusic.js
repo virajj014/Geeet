@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 
 import { useSelector, useDispatch } from 'react-redux';
-import { setAllSongs } from '../redux/actions';
+import { setActiveSong_global, setAllSongs, setIsPlaying_global } from '../redux/actions';
 import { backgroundColor1, backgroundColor2, primaryColor } from '../Styles/Theme1';
 
 
@@ -84,12 +84,66 @@ const AllMusic = ({ navigation }) => {
         // console.log(activesonguri);
     }
 
+
+
+    const [activesong, setActivesong] = useState('');
+    const activesong_global = useSelector(state => state.activesong_global);
+
+    // console.log(activesong_global);
+
+
+    useEffect(() => {
+        setActivesong(activesong_global);
+    }, [])
+
+
+    const isplaying = useSelector(state => state.isplaying_global);
+    const updatecurrentsong = (item) => {
+        setActivesong(item);
+        dispatch(setActiveSong_global(item));
+        dispatch(setIsPlaying_global(true))
+        // console.log(activesong_global);
+    }
+
+
+    const playpausesong = () => {
+        dispatch(setIsPlaying_global(!isplaying))
+    }
+
+
     return (
         <View style={styles.container}>
             <StatusBar />
+
+
+            {/*  */}
             <View style={styles.bottomnav}>
+                {activesong?.filename && <View style={styles.bottomsong}>
+                    <Image source={musicimg} style={styles.songimage} />
+                    <Text style={styles.songtitle1}>{activesong.filename}</Text>
+                    {
+                        isplaying == true ?
+                            <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive}
+                                onPress={
+                                    () => playpausesong()
+                                }
+                            />
+                            :
+                            <MaterialIcons name="play-circle-filled" size={40} style={styles.iconactive}
+
+                                onPress={
+                                    () => playpausesong()
+                                }
+
+                            />
+                    }
+
+                </View>}
                 <BottomNav activepage={'allmusic'} navigation={navigation} />
             </View>
+
+
+            {/*  */}
             <Text style={styles.head1}>Your Songs
             </Text>
             <ScrollView style={styles.cont2}>
@@ -98,11 +152,27 @@ const AllMusic = ({ navigation }) => {
 
                         <View key={item.id}>
                             {
-                                item.uri == activesonguri ?
+                                item.uri == activesong.uri ?
                                     <View style={styles.songcardactive}>
                                         <Image source={musicimg} style={styles.songimage} />
                                         <Text style={styles.songtitle1}>{item.filename}</Text>
-                                        <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive} />
+                                        {
+
+                                            isplaying == true ?
+                                                <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive}
+                                                    onPress={
+                                                        () => playpausesong()
+                                                    }
+
+                                                />
+                                                :
+                                                <MaterialIcons name="play-circle-filled" size={40} style={styles.iconactive}
+                                                    onPress={
+                                                        () => playpausesong()
+                                                    }
+
+                                                />
+                                        }
                                         <MaterialIcons name="playlist-add" size={24} color="black" style={styles.iconactive} />
                                     </View>
 
@@ -111,7 +181,10 @@ const AllMusic = ({ navigation }) => {
                                     <View style={styles.songcard}>
                                         <Image source={musicimg} style={styles.songimage} />
                                         <Text style={styles.songtitle}>{item.filename}</Text>
-                                        <AntDesign name="play" size={24} color="black" style={styles.icon} />
+                                        <AntDesign name="play" size={24} color="black" style={styles.icon}
+                                            onPress={() => updatecurrentsong(item)}
+
+                                        />
                                         <MaterialIcons name="playlist-add" size={24} color="black" style={styles.icon} />
                                     </View>
                             }
@@ -213,4 +286,14 @@ const styles = StyleSheet.create({
         margin: 10,
         width: '60%',
     },
+
+    bottomsong: {
+        backgroundColor: primaryColor,
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+
+    }
 })

@@ -2,17 +2,19 @@ import { StyleSheet, Text, View, Image, Animated } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import BottomNav from '../Components/BottomNav'
 import { backgroundColor1, primaryColor, secondaryColor } from '../Styles/Theme1'
-
+import musicimg from '../../assets/musicimg1.png'
 
 
 // icons 
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useSelector, useDispatch } from 'react-redux';
+import { setIsPlaying_global } from '../redux/actions'
 
 
 const Player = ({ navigation }) => {
-    const [isplaying, setisplaying] = useState(false)
+    const isplaying = useSelector(state => state.isplaying_global);
 
     const tempimg = "https://upload.wikimedia.org/wikipedia/en/b/b0/Glass_Animals_-_Heat_Waves.png"
 
@@ -41,37 +43,58 @@ const Player = ({ navigation }) => {
         inputRange: [0, 1],
         outputRange: ['0deg', '360deg']
     })
+
+
+    const activesong_global = useSelector(state => state.activesong_global)
+
+    // console.log("player page - ", activesong_global)
+    const dispatch = useDispatch()
+    const playpausesong = () => {
+        dispatch(setIsPlaying_global(!isplaying))
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.bottomnav}>
                 <BottomNav activepage={'player'} navigation={navigation} />
             </View>
 
-            <Animated.Image source={{ uri: tempimg }} style={[styles.imgbig,
-            { transform: [{ rotate: RotateData }] }
-            ]} />
-            <View style={styles.container2}>
-                <Text style={styles.text1}>Heat Waves</Text>
-                <Text style={styles.text2}>by - Glass Animals</Text>
-            </View>
-            <View style={styles.container3}>
-                <View style={styles.musiccompletedout}>
-                    <View style={styles.musiccompletedin}></View>
-                </View>
-                <View style={styles.timecont}>
-                    <Text style={styles.time}>00:00</Text>
-                    <Text style={styles.time}>01:00</Text>
-                </View>
-            </View>
+            {
+                activesong_global?.uri ?
+                    <View style={styles.container}>
+                        <Animated.Image source={musicimg} style={[styles.imgbig,
+                        { transform: [{ rotate: RotateData }] }
+                        ]} />
+                        <View style={styles.container2}>
+                            <Text style={styles.text1}>{activesong_global?.filename}</Text>
+                            <Text style={styles.text2}>{activesong_global?.artistname}</Text>
+                        </View>
+                        <View style={styles.container3}>
+                            <View style={styles.musiccompletedout}>
+                                <View style={styles.musiccompletedin}></View>
+                            </View>
+                            <View style={styles.timecont}>
+                                <Text style={styles.time}>00:00</Text>
+                                <Text style={styles.time}>01:00</Text>
+                            </View>
+                        </View>
 
-            <View style={styles.container4}>
-                <MaterialCommunityIcons name="skip-previous" size={50} color="black" style={styles.icon} />
-                {
-                    isplaying == false ? <AntDesign name="play" size={50} color="black" style={styles.icon} onPress={() => setisplaying(true)} />
-                        : <MaterialIcons name="pause-circle-filled" size={60} style={styles.icon} onPress={() => setisplaying(false)} />
-                }
-                <MaterialCommunityIcons name="skip-next" size={50} color="black" style={styles.icon} />
-            </View>
+                        <View style={styles.container4}>
+                            <MaterialCommunityIcons name="skip-previous" size={50} color="black" style={styles.icon} />
+                            {
+                                isplaying == false ? <AntDesign name="play" size={50} color="black" style={styles.icon} onPress={() => playpausesong()} />
+                                    : <MaterialIcons name="pause-circle-filled" size={60} style={styles.icon} onPress={() => playpausesong()} />
+                            }
+                            <MaterialCommunityIcons name="skip-next" size={50} color="black" style={styles.icon} />
+                        </View>
+                    </View>
+
+                    :
+
+                    <View style={styles.container}>
+                        <Text style={styles.text1}>No song selected</Text>
+                    </View>
+            }
 
         </View>
     )
@@ -94,12 +117,15 @@ const styles = StyleSheet.create({
         bottom: 0,
         width: '100%',
         alignItems: 'center',
+        zIndex: 10
     },
     imgbig: {
         width: 300,
         height: 300,
         borderRadius: 150,
         marginVertical: 20,
+        borderColor: primaryColor,
+        borderWidth: 2,
     },
     text1: {
         fontSize: 20,
