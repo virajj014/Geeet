@@ -19,7 +19,7 @@ export default function App() {
   return (
     <Provider store={Store}>
       <NavigationContainer>
-        <Stack.Navigator >
+        <Stack.Navigator initialRouteName='allmusic'>
           <Stack.Screen name="player" component={Player} options={
             { headerShown: false }
           } />

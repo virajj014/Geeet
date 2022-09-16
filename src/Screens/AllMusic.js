@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, StatusBar, ScrollView, Image } from 'react-native'
+import { StyleSheet, Text, View, StatusBar, ScrollView, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import BottomNav from '../Components/BottomNav'
 import * as MediaLibrary from 'expo-media-library';
@@ -13,6 +13,10 @@ import { backgroundColor1, backgroundColor2, primaryColor } from '../Styles/Them
 import musicimg from '../../assets/musicimg1.png'
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const AllMusic = ({ navigation }) => {
 
@@ -92,7 +96,16 @@ const AllMusic = ({ navigation }) => {
     // console.log(activesong_global);
 
 
+    const getlocalsong = async () => {
+        AsyncStorage.getItem('activesong_localstorage').then((value) => {
+            // console.log('local storage has active song - ', value);
+            dispatch(setActiveSong_global(JSON.parse(value)));
+            setActivesong(JSON.parse(value));
+        })
+    }
+
     useEffect(() => {
+        getlocalsong();
         setActivesong(activesong_global);
     }, [])
 
@@ -103,6 +116,14 @@ const AllMusic = ({ navigation }) => {
         dispatch(setActiveSong_global(item));
         dispatch(setIsPlaying_global(true))
         // console.log(activesong_global);
+
+        // console.log(item);
+        try {
+            AsyncStorage.setItem('activesong_localstorage', JSON.stringify(item));
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
 
@@ -118,27 +139,34 @@ const AllMusic = ({ navigation }) => {
 
             {/*  */}
             <View style={styles.bottomnav}>
-                {activesong?.filename && <View style={styles.bottomsong}>
-                    <Image source={musicimg} style={styles.songimage} />
-                    <Text style={styles.songtitle1}>{activesong.filename}</Text>
-                    {
-                        isplaying == true ?
-                            <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive}
-                                onPress={
-                                    () => playpausesong()
-                                }
-                            />
-                            :
-                            <MaterialIcons name="play-circle-filled" size={40} style={styles.iconactive}
+                {activesong?.filename &&
+                    <TouchableOpacity style={styles.bottomsong} onPress={
+                        () => navigation.navigate('player')
+                    }>
+                        <View style={styles.bottomsong} >
+                            <Image source={musicimg} style={styles.songimage} />
+                            <Text style={styles.songtitle1}>{activesong.filename}</Text>
+                            {
+                                isplaying == true ?
+                                    <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive}
+                                        onPress={
+                                            () => playpausesong()
+                                        }
+                                    />
+                                    :
+                                    <MaterialIcons name="play-circle-filled" size={40} style={styles.iconactive}
 
-                                onPress={
-                                    () => playpausesong()
-                                }
+                                        onPress={
+                                            () => playpausesong()
+                                        }
 
-                            />
-                    }
+                                    />
+                            }
 
-                </View>}
+                        </View>
+                    </TouchableOpacity>
+
+                }
                 <BottomNav activepage={'allmusic'} navigation={navigation} />
             </View>
 
