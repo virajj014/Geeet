@@ -10,6 +10,7 @@ import AllPlaylists from './src/Screens/AllPlaylists';
 
 import { Provider } from 'react-redux';
 import { Store } from './src/redux/store';
+import Addtoplaylist from './src/Screens/Addtoplaylist';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +29,9 @@ export default function App() {
           } />
           <Stack.Screen name="allplaylists" component={AllPlaylists} options={
             { headerShown: false }
+          } />
+          <Stack.Screen name="addtoplaylist" component={Addtoplaylist} options={
+            { headerShown: true, title: 'Add to playlist' }
           } />
         </Stack.Navigator>
       </NavigationContainer>

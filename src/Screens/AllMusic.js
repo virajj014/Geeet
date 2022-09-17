@@ -201,7 +201,12 @@ const AllMusic = ({ navigation }) => {
 
                                                 />
                                         }
-                                        <MaterialIcons name="playlist-add" size={24} color="black" style={styles.iconactive} />
+                                        <MaterialIcons name="playlist-add" size={24} color="black" style={styles.iconactive}
+                                            onPress={
+                                                () => navigation.navigate('addtoplaylist',
+                                                    { song: item })
+                                            }
+                                        />
                                     </View>
 
                                     :
@@ -213,7 +218,12 @@ const AllMusic = ({ navigation }) => {
                                             onPress={() => updatecurrentsong(item)}
 
                                         />
-                                        <MaterialIcons name="playlist-add" size={24} color="black" style={styles.icon} />
+                                        <MaterialIcons name="playlist-add" size={24} color="black" style={styles.icon}
+                                            onPress={
+                                                () => navigation.navigate('addtoplaylist',
+                                                    { song: item })
+                                            }
+                                        />
                                     </View>
                             }
                         </View>
