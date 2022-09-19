@@ -5,6 +5,7 @@ import { backgroundColor1, backgroundColor2, primaryColor, secondaryColor } from
 import { AntDesign } from '@expo/vector-icons';
 import { useState } from 'react';
 import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Addtoplaylist = ({ navigation, route }) => {
     const { song } = route.params;
@@ -12,22 +13,14 @@ const Addtoplaylist = ({ navigation, route }) => {
     const [oldplaylist, setOldplaylist] = useState([]);
 
 
-    const data = [
-        { name: 'playlist1', id: 1, songs: ['song1', 'song2', 'song3'] },
-        // { name: 'playlist2', id: 2, songs: ['song1', 'song2', 'song3'] },
-        // { name: 'playlist3', id: 3, songs: ['song1', 'song2'] },
-        // { name: 'playlist4', id: 4, songs: ['song1', 'song2', 'song3'] },
-        // { name: 'playlist5', id: 5, songs: ['song1', 'song2', 'song3'] },
-
-    ]
-
-
     useEffect(() => {
-        setOldplaylist(data);
+        AsyncStorage.getItem('old_playlists').then((value) => {
+            if (value) {
+                setOldplaylist(JSON.parse(value));
+            }
+        })
     }, [])
-    // console.log(newplaylist);
 
-    // console.log(song);
 
 
     const addtonewplaylist = (songuri) => {
@@ -42,8 +35,9 @@ const Addtoplaylist = ({ navigation, route }) => {
         setOldplaylist(newdata);
         setNewplaylist('');
         alert('song added to new playlist');
-        // console.log(oldplaylist);
-        // navigation.navigate('allmusic');
+        console.log(newdata);
+
+        AsyncStorage.setItem('old_playlists', JSON.stringify(newdata))
     }
 
 
@@ -52,7 +46,13 @@ const Addtoplaylist = ({ navigation, route }) => {
         newdata[playlistid - 1].songs.push({ songuri });
         setOldplaylist(newdata);
         alert('song added to existing playlist');
+        AsyncStorage.setItem('old_playlists', JSON.stringify(newdata))
+
     }
+
+
+    const [keyword, setKeyword] = useState('');
+    // console.log(keyword)
     return (
         <View style={styles.container}>
             <StatusBar />
@@ -94,28 +94,49 @@ const Addtoplaylist = ({ navigation, route }) => {
                 </Text>
                 <TextInput style={styles.input1} placeholder='Search'
                     placeholderTextColor={secondaryColor}
+                    onChangeText={(text) => setKeyword(text)}
                 />
 
                 <ScrollView style={styles.c2in}>
                     {
-                        oldplaylist.map((item) => {
-                            return (
-                                <TouchableOpacity key={item.id}
-                                    onPress={() => {
-                                        addtoexistingplaylist({ songuri: song.uri, playlistid: item.id })
-                                    }}
-                                >
-                                    <View style={styles.playlistcard}>
-                                        <Text style={styles.playlistname}>
-                                            {item.name}
-                                        </Text>
-                                        <Text style={styles.playlistcount}>
-                                            {item.songs.length} songs
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
-                            )
-                        })
+                        oldplaylist
+                            .filter((item) => {
+                                if (keyword == '') {
+                                    return item;
+                                }
+                                else if (
+                                    item.name.toLowerCase().includes(keyword.toLowerCase())
+                                ) {
+                                    return item;
+                                }
+                            })
+                            .map((item) => {
+                                return (
+                                    <TouchableOpacity key={item.id}
+                                        onPress={() => {
+                                            addtoexistingplaylist({ songuri: song.uri, playlistid: item.id })
+                                        }}
+                                    >
+                                        <View style={styles.playlistcard}>
+                                            <Text style={styles.playlistname}>
+                                                {item.name}
+                                            </Text>
+
+
+                                            {
+                                                item.songs.length != 1 ?
+                                                    <Text style={styles.playlistcount}>
+                                                        {item.songs.length} songs
+                                                    </Text>
+                                                    :
+                                                    <Text style={styles.playlistcount}>
+                                                        {item.songs.length} song
+                                                    </Text>
+                                            }
+                                        </View>
+                                    </TouchableOpacity>
+                                )
+                            })
                     }
                 </ScrollView>
             </View>

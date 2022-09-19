@@ -26,7 +26,12 @@ const AllMusic = ({ navigation }) => {
 
     const permissionPopUp = async () => {
         Alert.alert("Permission Required", "This app requires permission to access your media library", [
-            { text: "Accept", onPress: () => MediaLibrary.requestPermissionsAsync() },
+            {
+                text: "Accept", onPress: () => {
+                    MediaLibrary.requestPermissionsAsync()
+                    getAllSongs()
+                }
+            },
             { text: "Cancel", onPress: () => permissionPopUp() }
         ])
     }
@@ -54,6 +59,7 @@ const AllMusic = ({ navigation }) => {
                 console.log("Permission Denied, Please allow permission to show all music");
             }
             if (askpermission.status == "granted") {
+                getAllSongs()
                 console.log("Permission Granted, showing all music");
             }
             if (askpermission.status == "denied" && askpermission.canAskAgain == false) {
@@ -180,7 +186,7 @@ const AllMusic = ({ navigation }) => {
 
                         <View key={item.id}>
                             {
-                                item.uri == activesong.uri ?
+                                item.uri == activesong?.uri ?
                                     <View style={styles.songcardactive}>
                                         <Image source={musicimg} style={styles.songimage} />
                                         <Text style={styles.songtitle1}>{item.filename}</Text>

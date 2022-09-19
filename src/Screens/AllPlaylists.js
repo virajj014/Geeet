@@ -1,9 +1,36 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import BottomNav from '../Components/BottomNav'
-import { backgroundColor1, primaryColor, secondaryColor } from '../Styles/Theme1'
+import { backgroundColor1, backgroundColor2, primaryColor, secondaryColor } from '../Styles/Theme1'
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AntDesign } from '@expo/vector-icons';
 const AllPlaylists = ({ navigation }) => {
+    const [oldPlaylists, setOldPlaylists] = useState([])
+
+    useEffect(() => {
+        AsyncStorage.getItem('old_playlists').then((value) => {
+            if (value) {
+                setOldPlaylists(JSON.parse(value));
+            }
+        })
+    }, [])
+
+
+
+
+    // console.log(oldPlaylists);
+    const [keyword, setKeyword] = useState('');
+    // console.log(keyword)
+
+
+    const deletePlaylist = (id) => {
+        console.log(id);
+        let newdata = [...oldPlaylists];
+        newdata.splice({}, 1);
+        // setOldPlaylists(newdata);
+        // AsyncStorage.setItem('old_playlists', JSON.stringify(newdata))
+    }
     return (
         <View style={styles.container}>
             <Text>All playlists</Text>
@@ -13,172 +40,48 @@ const AllPlaylists = ({ navigation }) => {
 
 
             <ScrollView style={styles.playlistouter}>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
+                <TextInput style={styles.input1} placeholder='Search'
+                    placeholderTextColor={secondaryColor}
+                    onChangeText={(text) => setKeyword(text)}
+                />
+                {oldPlaylists
+                    .filter((item) => {
+                        if (keyword == '') {
+                            return item;
+                        } else if (item.name.toLowerCase().includes(keyword.toLowerCase())) {
+                            return item;
+                        }
+                    })
+                    .map((item) => {
+                        return (
+                            <TouchableOpacity key={item.id}>
+                                <View style={styles.playlistcard}>
+                                    <Text style={styles.txt1}>{item.name}</Text>
+                                    <View style={styles.playlistcardin}>
+                                        {
+                                            item.songs.length != 1 ?
+                                                <Text style={styles.txt2}>
+                                                    {item.songs.length} songs
+                                                </Text>
+                                                :
+                                                <Text style={styles.txt2}>
+                                                    {item.songs.length} song
+                                                </Text>
+                                        }
+                                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
 
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
+                                        <AntDesign name="delete" size={24} color="black" style={styles.icon1}
+                                            onPress={() => {
+                                                deletePlaylist(item.id)
+                                            }}
 
+                                        />
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
 
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
-                <View style={styles.playlistcard}>
-                    <Text style={styles.txt1}>Playlist 1</Text>
-                    <View style={styles.playlistcardin}>
-                        <Feather name="play-circle" size={24} color="black" style={styles.icon1} />
-                        <Feather name="plus-square" size={24} color="black" style={styles.icon1} />
-                    </View>
-                </View>
-
+                        )
+                    })}
 
             </ScrollView>
         </View>
@@ -219,14 +122,28 @@ const styles = StyleSheet.create({
     },
     playlistcardin: {
         flexDirection: 'row',
+        alignItems: 'center',
     },
     txt1: {
         color: primaryColor,
         fontSize: 20,
     },
+    txt2: {
+        color: secondaryColor,
+        fontSize: 15,
+    },
     icon1: {
         color: primaryColor,
         fontSize: 30,
         marginHorizontal: 10,
-    }
+    },
+    input1: {
+        backgroundColor: backgroundColor2,
+        width: '90%',
+        borderRadius: 10,
+        marginVertical: 20,
+        padding: 10,
+        color: primaryColor,
+        alignSelf: 'center',
+    },
 })
