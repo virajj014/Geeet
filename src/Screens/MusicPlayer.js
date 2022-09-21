@@ -13,8 +13,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { setIsPlaying_global } from '../redux/actions'
 
 
-const Player = ({ navigation }) => {
-    const isplaying = useSelector(state => state.isplaying_global);
+const MusicPlayer = ({ navigation }) => {
+    const isplaying = useSelector(state => state.isplaying_global);  // for music
+    const isplayingplaylist = useSelector(state => state.isplayingplaylist_global);  // for playlist
+    const isplayingmusicorplaylist = useSelector(state => state.isplayingmusicorplaylist_global);  // for playlist
 
     const tempimg = "https://upload.wikimedia.org/wikipedia/en/b/b0/Glass_Animals_-_Heat_Waves.png"
 
@@ -52,6 +54,9 @@ const Player = ({ navigation }) => {
     const playpausesong = () => {
         dispatch(setIsPlaying_global(!isplaying))
     }
+
+
+    console.log(isplayingmusicorplaylist)
 
     return (
         <View style={styles.container}>
@@ -100,7 +105,7 @@ const Player = ({ navigation }) => {
     )
 }
 
-export default Player
+export default MusicPlayer
 
 const styles = StyleSheet.create({
     container: {

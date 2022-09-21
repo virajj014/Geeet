@@ -2,7 +2,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Player from './src/Screens/Player';
 import AllMusic from './src/Screens/AllMusic';
 import AllPlaylists from './src/Screens/AllPlaylists';
 
@@ -11,6 +10,8 @@ import AllPlaylists from './src/Screens/AllPlaylists';
 import { Provider } from 'react-redux';
 import { Store } from './src/redux/store';
 import Addtoplaylist from './src/Screens/Addtoplaylist';
+import MusicPlayer from './src/Screens/MusicPlayer';
+import PlaylistPlayer from './src/Screens/PlaylistPlayer';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,7 +22,10 @@ export default function App() {
     <Provider store={Store}>
       <NavigationContainer>
         <Stack.Navigator initialRouteName='allmusic'>
-          <Stack.Screen name="player" component={Player} options={
+          <Stack.Screen name="musicplayer" component={MusicPlayer} options={
+            { headerShown: false }
+          } />
+          <Stack.Screen name="playlistplayer" component={PlaylistPlayer} options={
             { headerShown: false }
           } />
           <Stack.Screen name="allmusic" component={AllMusic} options={

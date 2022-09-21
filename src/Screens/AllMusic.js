@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 
 
 import { useSelector, useDispatch } from 'react-redux';
-import { setActiveSong_global, setAllSongs, setIsPlaying_global } from '../redux/actions';
+import { setActiveSong_global, setAllSongs, setIsPlayingMusicOrPlaylist_global, setIsPlayingPlaylist_global, setIsPlaying_global } from '../redux/actions';
 import { backgroundColor1, backgroundColor2, primaryColor } from '../Styles/Theme1';
 
 
@@ -118,9 +118,12 @@ const AllMusic = ({ navigation }) => {
 
     const isplaying = useSelector(state => state.isplaying_global);
     const updatecurrentsong = (item) => {
+        dispatch(setIsPlayingMusicOrPlaylist_global('music'))
+
         setActivesong(item);
         dispatch(setActiveSong_global(item));
         dispatch(setIsPlaying_global(true))
+        dispatch(setIsPlayingPlaylist_global(false))  // for playlist
         // console.log(activesong_global);
 
         // console.log(item);
@@ -135,7 +138,12 @@ const AllMusic = ({ navigation }) => {
 
     const playpausesong = () => {
         dispatch(setIsPlaying_global(!isplaying))
+        dispatch(setIsPlayingPlaylist_global(false))  // for playlist
+        dispatch(setIsPlayingMusicOrPlaylist_global('music'))
     }
+
+
+
 
 
     return (
