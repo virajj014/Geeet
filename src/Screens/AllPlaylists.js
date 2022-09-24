@@ -58,6 +58,8 @@ const AllPlaylists = ({ navigation }) => {
         dispatch(setActivePlaylist_global(item))
         AsyncStorage.setItem('active_playlist', JSON.stringify(item));
         dispatch(setIsPlayingMusicOrPlaylist_global('playlist'))
+        AsyncStorage.setItem('isplayingmusicorplaylist', JSON.stringify('playlist'));
+
         dispatch(setIsPlaying_global(false))  // for music
     }
 
@@ -66,6 +68,8 @@ const AllPlaylists = ({ navigation }) => {
         dispatch(setIsPlayingPlaylist_global(!isplayingplaylist))
         dispatch(setIsPlaying_global(false))  // for music
         dispatch(setIsPlayingMusicOrPlaylist_global('playlist'))
+        AsyncStorage.setItem('isplayingmusicorplaylist', JSON.stringify('playlist'));
+
     }
 
     return (

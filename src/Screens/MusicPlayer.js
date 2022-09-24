@@ -10,16 +10,39 @@ import { AntDesign } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { setIsPlaying_global } from '../redux/actions'
+import { setactiveSong, setIsPlaying_global } from '../redux/actions'
 
+import TrackPlayer, { Capability, Event, State, usePlaybackState, useProgress, useTrackPlayerEvents } from 'react-native-track-player';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+
+
+const events = [
+    Event.PlaybackState,
+    Event.PlaybackError,
+];
 
 const MusicPlayer = ({ navigation }) => {
-    const isplaying = useSelector(state => state.isplaying_global);  // for music
-    const isplayingplaylist = useSelector(state => state.isplayingplaylist_global);  // for playlist
-    const isplayingmusicorplaylist = useSelector(state => state.isplayingmusicorplaylist_global);  // for playlist
 
-    const tempimg = "https://upload.wikimedia.org/wikipedia/en/b/b0/Glass_Animals_-_Heat_Waves.png"
+    const [activeSong, setactiveSong] = useState({})
 
+    // platback state play pause btn track player notification bar to app ---------------
+    const [playerState, setPlayerState] = useState(null)
+
+    useTrackPlayerEvents(events, (event) => {
+        if (event.type === Event.PlaybackError) {
+            console.warn('An error occured while playing the current track.');
+        }
+        if (event.type === Event.PlaybackState) {
+            setPlayerState(event.state);
+        }
+    });
+
+    const isplaying = playerState === State.Playing;
+    // console.log(isplaying)
+    // -------------------------------
+
+    // Rotate -----------------------------------------------------------
     let rotateValueHolder = new Animated.Value(0);
     const startImageRotateFunction = () => {
         rotateValueHolder.setValue(0);
@@ -38,6 +61,7 @@ const MusicPlayer = ({ navigation }) => {
             rotateValueHolder.setValue(0);
             rotateValueHolder.stopAnimation()
         }
+
     }, [isplaying])
 
 
@@ -45,18 +69,73 @@ const MusicPlayer = ({ navigation }) => {
         inputRange: [0, 1],
         outputRange: ['0deg', '360deg']
     })
+    //-------------------------------------------------------------------------
 
-
-    const activesong_global = useSelector(state => state.activesong_global)
-
-    // console.log("player page - ", activesong_global)
     const dispatch = useDispatch()
-    const playpausesong = () => {
+    const playpausesong = async (item) => {
         dispatch(setIsPlaying_global(!isplaying))
+
+
+        if (isplaying == false) {
+            TrackPlayer.play()
+        }
+        else {
+            TrackPlayer.pause()
+        }
+    }
+
+    const [activesong, setactivesong] = useState({});
+
+    const getactivesong = async () => {
+        let trackdata = await TrackPlayer.getQueue();
+        let track = trackdata[await TrackPlayer.getCurrentTrack()]
+
+        setactivesong(track)
+
+        console.log(track)
+
+    }
+
+    useEffect(() => {
+        getactivesong()
+    }, [])
+
+    const skiptonext = async () => {
+        try {
+            await TrackPlayer.skipToNext();
+            await TrackPlayer.play();
+            let trackdata = await TrackPlayer.getQueue()
+            let track = trackdata[await TrackPlayer.getCurrentTrack()]
+            getactivesong()
+
+            AsyncStorage.setItem("activesong", JSON.stringify(track))
+
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+
     }
 
 
-    console.log(isplayingmusicorplaylist)
+    const skiptoprevious = async () => {
+        try {
+            await TrackPlayer.skipToPrevious();
+            await TrackPlayer.play();
+            let trackdata = await TrackPlayer.getQueue()
+            let track = trackdata[await TrackPlayer.getCurrentTrack()]
+            getactivesong()
+
+            AsyncStorage.setItem("activesong", JSON.stringify(track))
+
+        }
+        catch (error) {
+            console.log(error)
+        }
+
+
+    }
 
     return (
         <View style={styles.container}>
@@ -65,14 +144,14 @@ const MusicPlayer = ({ navigation }) => {
             </View>
 
             {
-                activesong_global?.uri ?
+                activesong ?
                     <View style={styles.container}>
                         <Animated.Image source={musicimg} style={[styles.imgbig,
                         { transform: [{ rotate: RotateData }] }
                         ]} />
                         <View style={styles.container2}>
-                            <Text style={styles.text1}>{activesong_global?.filename}</Text>
-                            <Text style={styles.text2}>{activesong_global?.artistname}</Text>
+                            <Text style={styles.text1}>{activesong?.title}</Text>
+                            <Text style={styles.text2}>{activesong?.artistname}</Text>
                         </View>
                         <View style={styles.container3}>
                             <View style={styles.musiccompletedout}>
@@ -85,12 +164,26 @@ const MusicPlayer = ({ navigation }) => {
                         </View>
 
                         <View style={styles.container4}>
-                            <MaterialCommunityIcons name="skip-previous" size={50} color="black" style={styles.icon} />
+                            <MaterialCommunityIcons name="skip-previous" size={50} color="black" style={styles.icon}
+
+                                onPress={
+                                    () => {
+                                        skiptoprevious()
+                                    }
+                                }
+                            />
                             {
                                 isplaying == false ? <AntDesign name="play" size={50} color="black" style={styles.icon} onPress={() => playpausesong()} />
                                     : <MaterialIcons name="pause-circle-filled" size={60} style={styles.icon} onPress={() => playpausesong()} />
                             }
-                            <MaterialCommunityIcons name="skip-next" size={50} color="black" style={styles.icon} />
+                            <MaterialCommunityIcons name="skip-next" size={50} color="black" style={styles.icon}
+                                onPress={
+                                    () => {
+                                        skiptonext()
+                                    }
+                                }
+
+                            />
                         </View>
                     </View>
 

@@ -14,20 +14,65 @@ import musicimg from '../../assets/musicimg1.png'
 import { AntDesign } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-
-import TrackPlayer, { Capability, Event, State, usePlaybackState, useProgress, useTrackPlayerEvents } from 'react-native-track-player';
-
-const events = [
-    Event.PlaybackState,
-    Event.PlaybackError,
-];
-
+import TrackPlayer, { Capability, Event, RepeatMode, State, usePlaybackState, useProgress, useTrackPlayerEvents } from 'react-native-track-player';
 
 const AllMusic = ({ navigation }) => {
-    const dispatch = useDispatch()
+
+    const [trackdata, setTrackData] = useState([]);
+    const setUpPlayer = async () => {
+        try {
+            await TrackPlayer.setupPlayer();
+            await TrackPlayer.updateOptions({
+                stopWithApp: true,
+                capabilities: [
+                    Capability.Play,
+                    Capability.Pause,
+                    Capability.SkipToNext,
+                    Capability.SkipToPrevious,
+                    Capability.Stop,
+                ],
+                compactCapabilities: [
+                    Capability.Play,
+                    Capability.Pause,
+                    Capability.SkipToNext,
+                    Capability.SkipToPrevious,
+                    Capability.Stop,
+                ],
+            });
+            const data = await getAllSongs()
+
+            let temparr = data.map((song) => {
+                return {
+                    id: song.id,
+                    url: song.uri,
+                    title: song.filename,
+                    artist: song.artist,
+                    artwork: song.artwork,
+                }
+            })
+
+            // console.log(temparr)
+            setTrackData(temparr)
+            await TrackPlayer.add(temparr)
+            console.log(await TrackPlayer.getQueue())
+        }
+        catch (err) {
+            console.log(err)
+        }
+    }
+    useEffect(() => {
+        setUpPlayer()
+    }, [])
+
+
+    // const [allsongs, setAllSongs] = useState('Permission Not Granted');
+
+    const mysongs = useSelector(state => state.allsongs);
+
     const permissionPopUp = async () => {
         Alert.alert("Permission Required", "This app requires permission to access your media library", [
             {
@@ -39,6 +84,8 @@ const AllMusic = ({ navigation }) => {
             { text: "Cancel", onPress: () => permissionPopUp() }
         ])
     }
+
+
     const getpermission = async () => {
         const permission = await MediaLibrary.getPermissionsAsync();
         // console.log(permission);
@@ -69,171 +116,221 @@ const AllMusic = ({ navigation }) => {
             }
         }
     }
+
+    useEffect(() => {
+        getpermission();
+    }, [])
+
+
+    const dispatch = useDispatch()
+
     const getAllSongs = async () => {
         const songs = await MediaLibrary.getAssetsAsync({
             mediaType: "audio",
         })
+
         dispatch(setAllSongs(songs));
-        // console.log(songs);
+
+
+        // setAllSongs(songs.assets);
         return songs?.assets;
     }
 
-    const mysongs = useSelector(state => state.allsongs);
 
+    // console.log(mysongs.assets);
 
-    // Track player setup --------------------------------------------
-    const [trackdata, setTrackdata] = useState([]);
-    const setUpPlayer = async () => {
-        try {
-            await TrackPlayer.setupPlayer();
-            await TrackPlayer.updateOptions({
-                stopWithApp: true,
-                capabilities: [
-                    Capability.Play,
-                    Capability.Pause,
-                    Capability.SkipToNext,
-                    Capability.SkipToPrevious,
-                    Capability.Stop,
-                ],
-                compactCapabilities: [
-                    Capability.Play,
-                    Capability.Pause,
-                    Capability.SkipToNext,
-                    Capability.SkipToPrevious,
-                    Capability.Stop,
-                ]
-            })
-
-            const data = await getAllSongs();
-            // console.log(data);
-            let temparr = data.map((song) => {
-                return {
-                    id: song.id,
-                    url: song.uri,
-                    title: song.filename,
-                    artist: song.artist,
-                    artwork: song.artwork,
-                }
-            })
-            // console.log(temparr);
-            setTrackdata(temparr);
-            await TrackPlayer.add(temparr);
-            // console.log(await TrackPlayer.getQueue());
-        }
-        catch (error) {
-            console.log(error);
-        }
+    let activesonguri = 'null';
+    if (mysongs?.assets) {
+        activesonguri = mysongs?.assets[0]?.uri;
+        // console.log(activesonguri);
     }
-    //----------------------------------------------------------------
 
 
-    // set active song from local storage ---------------------------------
-    const [activeSong, setActiveSong] = useState(null);
+
+    const [activesong, setActivesong] = useState('');
+    const activesong_global = useSelector(state => state.activesong_global);
+
+    // console.log(activesong_global);
+
 
     const getlocalsong = async () => {
         AsyncStorage.getItem('activesong_localstorage').then(async (value) => {
             // console.log('local storage has active song - ', value);
             dispatch(setActiveSong_global(JSON.parse(value)));
-            setActiveSong(JSON.parse(value));
+            setActivesong(JSON.parse(value));
 
+
+            let index = trackdata.findIndex(
+                (track) => track.id === JSON.parse(value).id
+            )
+            await TrackPlayer.skip(index)
         })
     }
-    // -------------------------------------------------------------------
-
-
 
     useEffect(() => {
-        getpermission();
-        setUpPlayer();
         getlocalsong();
+        setActivesong(activesong_global);
     }, [])
 
 
+    const isplaying = useSelector(state => state.isplaying_global);
 
 
 
 
+    const [firsttime, setFirsttime] = useState(true);
+
+    const [convertedtrack, setConvertedTrack] = useState(null)
 
 
-    // Update current song ---------------------------------------
-    const updatecurrentsong = async (song) => {
-        dispatch(setActiveSong_global(song));
-        setActiveSong(song);
-        AsyncStorage.setItem('activesong_localstorage', JSON.stringify(song));
-        let index = trackdata.findIndex((song1) => song1.id == song.id);
+    const updatecurrentsong = async (item) => {
+        setFirsttime(false);
+        dispatch(setIsPlayingMusicOrPlaylist_global('music'))
+
+        setActivesong(item);
+        dispatch(setActiveSong_global(item));
+        dispatch(setIsPlaying_global(true))
+        dispatch(setIsPlayingPlaylist_global(false))  // for playlist
+        // console.log(activesong_global);
+
+        // console.log(item);
+        try {
+            AsyncStorage.setItem('activesong_localstorage', JSON.stringify(item));
+        }
+        catch (e) {
+            console.log(e);
+        }
+
+
+
+
 
         try {
-            await TrackPlayer.skip(index);
-            await TrackPlayer.setRate(1);
-            await TrackPlayer.play();
+
+
+            let index = trackdata.findIndex(
+                (track) => track.id === item.id
+            )
+            await TrackPlayer.skip(index)
+            await TrackPlayer.play()
+            // console.log(await TrackPlayer.getQueue())
+
+            // console.log(typeof (toskip))
         }
-        catch (error) {
-            console.log(error);
+        catch (err) {
+            alert(err)
         }
-        setIsPlayingMusicOrPlaylist_global('music')
-        AsyncStorage.setItem('isplayingmusicorplaylist', 'music');
     }
-    //-------------------------------------------------------------
 
 
-    // platback state play pause btn track player notification bar to app ---------------
-    const [playerState, setPlayerState] = useState(null)
 
-    useTrackPlayerEvents(events, (event) => {
-        if (event.type === Event.PlaybackError) {
-            console.warn('An error occured while playing the current track.');
+
+
+
+
+    const playpausesong = async (item) => {
+        // console.log(item);
+        dispatch(setIsPlaying_global(!isplaying))
+        dispatch(setIsPlayingPlaylist_global(false))  // for playlist
+        dispatch(setIsPlayingMusicOrPlaylist_global('music'))
+
+        if (firsttime == true) {
+            await TrackPlayer.reset();
+            await TrackPlayer.add({
+                id: item.id,
+                url: item.uri,
+                title: item.filename,
+                artist: item.artist,
+                artwork: item.artwork,
+            });
+            await TrackPlayer.play();
+            await TrackPlayer.setRate(1);
+
+            setFirsttime(false);
         }
-        if (event.type === Event.PlaybackState) {
-            setPlayerState(event.state);
+
+        else if (firsttime == false) {
+            if (isplaying == true) {
+                TrackPlayer.pause();
+            }
+            else {
+                TrackPlayer.play();
+            }
+        }
+    }
+
+
+    // connect play pause from navbar to app
+    TrackPlayer.addEventListener('playback-state', async (data) => {
+        // console.log(data)
+        if (data.state == 3) {
+            dispatch(setIsPlaying_global(false))
+        }
+        else if (data.state == 2) {
+            dispatch(setIsPlaying_global(true))
         }
     })
 
-    const isplaying = playerState === State.Playing;
+    TrackPlayer.addEventListener('playback-track-changed', async (data) => {
+        // console.log('track is changed')
+        // console.log(data)
+        // console.log(await TrackPlayer.getCurrentTrack())
+        let track = trackdata[await TrackPlayer.getCurrentTrack()]
+        // console.log(track)
+        // dispatch(setActiveSong_global(track))
+        setActivesong(track)
+    })
 
 
-    //----------------------------------------------------------------------------------
-
-    // Play and Pause ---------------------------------------------
-
-
-    const playpausesong = async () => {
-        if (playerState == State.Playing) {
-            try {
-                await TrackPlayer.pause()
-
-            }
-            catch (err) {
-                console.log('play pause song error 1 ', err)
-            }
-        }
-        else {
-            try {
-                await TrackPlayer.play()
-            }
-            catch (err) {
-                console.log('play pause song error 2 ', err)
-            }
-        }
-        AsyncStorage.setItem('isplayingmusicorplaylist', 'music');
-
-    }
-
-
-    //--------------------------------------------------------------
     return (
         <View style={styles.container}>
             <StatusBar />
+
+
+            {/*  */}
             <View style={styles.bottomnav}>
+                {activesong?.filename &&
+                    <TouchableOpacity style={styles.bottomsong} onPress={
+                        () => navigation.navigate('player')
+                    }>
+                        <View style={styles.bottomsong} >
+                            <Image source={musicimg} style={styles.songimage} />
+                            <Text style={styles.songtitle1}>{activesong.filename}</Text>
+                            {
+                                isplaying == true ?
+                                    <MaterialIcons name="pause-circle-filled" size={40} style={styles.iconactive}
+                                        onPress={
+                                            () => playpausesong(activesong)
+                                        }
+                                    />
+                                    :
+                                    <MaterialIcons name="play-circle-filled" size={40} style={styles.iconactive}
+
+                                        onPress={
+                                            () => playpausesong(activesong)
+                                        }
+
+                                    />
+                            }
+
+                        </View>
+                    </TouchableOpacity>
+
+                }
                 <BottomNav activepage={'allmusic'} navigation={navigation} />
             </View>
+
+
+            {/*  */}
             <Text style={styles.head1}>Your Songs
             </Text>
             <ScrollView style={styles.cont2}>
                 {
                     mysongs?.assets && mysongs.assets.map((item) =>
+
                         <View key={item.id}>
                             {
-                                item.uri == activeSong?.uri ?
+                                item.uri == activesong?.uri ?
                                     <View style={styles.songcardactive}>
                                         <Image source={musicimg} style={styles.songimage} />
                                         <Text style={styles.songtitle1}>{item.filename}</Text>
@@ -281,9 +378,13 @@ const AllMusic = ({ navigation }) => {
                             }
                         </View>
 
+
+                        // <Text style={styles.songtitle1}>{item.filename}</Text>
+
                     )
                 }
             </ScrollView>
+
         </View>
     )
 }
@@ -384,6 +485,3 @@ const styles = StyleSheet.create({
 
     }
 })
-
-
-

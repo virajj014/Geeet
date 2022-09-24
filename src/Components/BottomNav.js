@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 
 
 // icons import
@@ -7,14 +7,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 import { backgroundColor1, backgroundColor2, primaryColor, themecol } from '../Styles/Theme1';
 import { useSelector } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BottomNav = ({ activepage, navigation }) => {
-    // console.log(activepage)
+    const [isplayingMusicOrPlaylist, setisplayingMusicOrPlaylist] = useState('music')
 
+    AsyncStorage.getItem('isplayingmusicorplaylist').then((value) => {
+        setisplayingMusicOrPlaylist(value)
+    })
 
-    const isplayingMusicOrPlaylist = useSelector(state => state.isplayingMusicOrPlaylist_global);
-
-    // console.log(isplayingmusicorplaylist)
     return (
         <View style={styles.container}>
             {
