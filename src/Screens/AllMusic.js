@@ -103,6 +103,8 @@ const AllMusic = ({ navigation }) => {
                     Capability.Stop,
                 ]
             })
+            await TrackPlayer.setRate(1);
+
 
             const data = await getAllSongs();
             // console.log(data);
@@ -160,6 +162,7 @@ const AllMusic = ({ navigation }) => {
         dispatch(setActiveSong_global(song));
         setActiveSong(song);
         AsyncStorage.setItem('activesong_localstorage', JSON.stringify(song));
+        AsyncStorage.setItem('isplaying_localstorage', JSON.stringify(true));
         let index = trackdata.findIndex((song1) => song1.id == song.id);
 
         try {
@@ -200,7 +203,7 @@ const AllMusic = ({ navigation }) => {
         if (playerState == State.Playing) {
             try {
                 await TrackPlayer.pause()
-
+                AsyncStorage.setItem('isplaying_localstorage', JSON.stringify(false));
             }
             catch (err) {
                 console.log('play pause song error 1 ', err)
@@ -209,6 +212,8 @@ const AllMusic = ({ navigation }) => {
         else {
             try {
                 await TrackPlayer.play()
+                AsyncStorage.setItem('isplaying_localstorage', JSON.stringify(true));
+
             }
             catch (err) {
                 console.log('play pause song error 2 ', err)
@@ -219,7 +224,15 @@ const AllMusic = ({ navigation }) => {
     }
 
 
-    //--------------------------------------------------------------
+
+    TrackPlayer.addEventListener('playback-track-changed', async (state) => {
+        let trackdata = await TrackPlayer.getQueue();
+        let track = trackdata[await TrackPlayer.getCurrentTrack()]
+        setActiveSong(track)
+        AsyncStorage.setItem('activesong_localstorage', JSON.stringify(track));
+    })
+
+
     return (
         <View style={styles.container}>
             <StatusBar />
@@ -233,7 +246,7 @@ const AllMusic = ({ navigation }) => {
                     mysongs?.assets && mysongs.assets.map((item) =>
                         <View key={item.id}>
                             {
-                                item.uri == activeSong?.uri ?
+                                item.uri == activeSong?.uri || item.uri == activeSong?.url ?
                                     <View style={styles.songcardactive}>
                                         <Image source={musicimg} style={styles.songimage} />
                                         <Text style={styles.songtitle1}>{item.filename}</Text>

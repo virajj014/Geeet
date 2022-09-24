@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActivePlaylist_global, setIsPlayingMusicOrPlaylist_global, setIsPlayingPlaylist_global, setIsPlaying_global } from '../redux/actions';
 
 import { MaterialIcons } from '@expo/vector-icons';
+import TrackPlayer from 'react-native-track-player';
 
 
 const AllPlaylists = ({ navigation }) => {
@@ -53,7 +54,7 @@ const AllPlaylists = ({ navigation }) => {
     // console.log("active playlist", activeplaylist)
     const isplayingplaylist = useSelector(state => state.isplayingplaylist_global)
 
-    const setactiveplaylist = (item) => {
+    const setactiveplaylist = async (item) => {
         dispatch(setIsPlayingPlaylist_global(true))
         dispatch(setActivePlaylist_global(item))
         AsyncStorage.setItem('active_playlist', JSON.stringify(item));
@@ -61,15 +62,33 @@ const AllPlaylists = ({ navigation }) => {
         AsyncStorage.setItem('isplayingmusicorplaylist', JSON.stringify('playlist'));
 
         dispatch(setIsPlaying_global(false))  // for music
+
+
+        const data = item.songs;
+        // console.log(data);
+
+        await TrackPlayer.removeUpcomingTracks();
+        await TrackPlayer.add(data);
+        await TrackPlayer.getQueue().then((data) => {
+            console.log("queue", data)
+        })
     }
 
 
-    const playpauseplaylist = () => {
+    const playpauseplaylist = async (item) => {
         dispatch(setIsPlayingPlaylist_global(!isplayingplaylist))
         dispatch(setIsPlaying_global(false))  // for music
         dispatch(setIsPlayingMusicOrPlaylist_global('playlist'))
         AsyncStorage.setItem('isplayingmusicorplaylist', JSON.stringify('playlist'));
 
+        const data = item.songs;
+        // console.log(data);
+
+        await TrackPlayer.removeUpcomingTracks();
+        await TrackPlayer.add(data);
+        await TrackPlayer.getQueue().then((data) => {
+            console.log("queue", data)
+        })
     }
 
     return (
@@ -115,7 +134,7 @@ const AllPlaylists = ({ navigation }) => {
                                                     isplayingplaylist == true ?
                                                         <MaterialIcons name="pause-circle-filled" size={40} style={styles.icon2} onPress={
                                                             () => {
-                                                                playpauseplaylist()
+                                                                playpauseplaylist(item)
                                                             }
 
                                                         } />

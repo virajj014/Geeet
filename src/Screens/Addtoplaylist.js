@@ -23,27 +23,41 @@ const Addtoplaylist = ({ navigation, route }) => {
 
 
 
-    const addtonewplaylist = (songuri) => {
+    const addtonewplaylist = (song) => {
         if (newplaylist.length == 0) {
             alert('Please enter a playlist name');
             return
         }
 
         let newdata = [...oldplaylist];
-        newdata.push({ name: newplaylist, id: oldplaylist.length + 1, songs: [{ songuri }] });
+        newdata.push({
+            name: newplaylist, id: oldplaylist.length + 1, songs: [{
+                id: song.id,
+                url: song.uri,
+                title: song.filename,
+                artist: song.artist,
+                artwork: song.artwork,
+            }]
+        });
 
         setOldplaylist(newdata);
         setNewplaylist('');
         alert('song added to new playlist');
-        console.log(newdata);
+        // console.log(newdata);
 
         AsyncStorage.setItem('old_playlists', JSON.stringify(newdata))
     }
 
 
-    const addtoexistingplaylist = ({ songuri, playlistid }) => {
+    const addtoexistingplaylist = ({ song, playlistid }) => {
         let newdata = [...oldplaylist];
-        newdata[playlistid - 1].songs.push({ songuri });
+        newdata[playlistid - 1].songs.push({
+            id: song.id,
+            url: song.uri,
+            title: song.filename,
+            artist: song.artist,
+            artwork: song.artwork,
+        });
         setOldplaylist(newdata);
         alert('song added to existing playlist');
         AsyncStorage.setItem('old_playlists', JSON.stringify(newdata))
@@ -81,7 +95,7 @@ const Addtoplaylist = ({ navigation, route }) => {
                     <AntDesign name="plussquare" size={24} color="black" style={styles.icon}
 
                         onPress={() => {
-                            addtonewplaylist({ songuri: song.uri })
+                            addtonewplaylist(song)
                         }}
                     />
                 </View>
@@ -114,7 +128,7 @@ const Addtoplaylist = ({ navigation, route }) => {
                                 return (
                                     <TouchableOpacity key={item.id}
                                         onPress={() => {
-                                            addtoexistingplaylist({ songuri: song.uri, playlistid: item.id })
+                                            addtoexistingplaylist({ song, playlistid: item.id })
                                         }}
                                     >
                                         <View style={styles.playlistcard}>

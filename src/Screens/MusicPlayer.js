@@ -24,118 +24,58 @@ const events = [
 
 const MusicPlayer = ({ navigation }) => {
 
-    const [activeSong, setactiveSong] = useState({})
+    const [activesong, setactivesong] = useState({})
 
-    // platback state play pause btn track player notification bar to app ---------------
-    const [playerState, setPlayerState] = useState(null)
+    const getActiveSong = async () => {
 
-    useTrackPlayerEvents(events, (event) => {
-        if (event.type === Event.PlaybackError) {
-            console.warn('An error occured while playing the current track.');
-        }
-        if (event.type === Event.PlaybackState) {
-            setPlayerState(event.state);
-        }
-    });
-
-    const isplaying = playerState === State.Playing;
-    // console.log(isplaying)
-    // -------------------------------
-
-    // Rotate -----------------------------------------------------------
-    let rotateValueHolder = new Animated.Value(0);
-    const startImageRotateFunction = () => {
-        rotateValueHolder.setValue(0);
-        Animated.timing(rotateValueHolder, {
-            toValue: 1,
-            duration: 3000,
-            useNativeDriver: false
-        }).start(() => startImageRotateFunction());
-    }
-
-    useEffect(() => {
-        if (isplaying == true) {
-            startImageRotateFunction()
-        }
-        else {
-            rotateValueHolder.setValue(0);
-            rotateValueHolder.stopAnimation()
-        }
-
-    }, [isplaying])
-
-
-    const RotateData = rotateValueHolder.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg']
-    })
-    //-------------------------------------------------------------------------
-
-    const dispatch = useDispatch()
-    const playpausesong = async (item) => {
-        dispatch(setIsPlaying_global(!isplaying))
-
-
-        if (isplaying == false) {
-            TrackPlayer.play()
-        }
-        else {
-            TrackPlayer.pause()
-        }
-    }
-
-    const [activesong, setactivesong] = useState({});
-
-    const getactivesong = async () => {
         let trackdata = await TrackPlayer.getQueue();
         let track = trackdata[await TrackPlayer.getCurrentTrack()]
-
+        // setActiveSong(track)
+        // console.log(track)
         setactivesong(track)
-
-        console.log(track)
-
     }
 
+
+    // const [firsttime, setfirsttime] = useState(true);
     useEffect(() => {
-        getactivesong()
+        getActiveSong()
+
+
+        AsyncStorage.getItem('isplaying_localstorage').then((value) => {
+            if (value == 'true') {
+                setisplaying(true)
+            }
+            else {
+
+                setisplaying(false)
+            }
+        })
     }, [])
 
+
+    const [isplaying, setisplaying] = useState(false)
+
+
+    TrackPlayer.addEventListener('playback-state', async (data) => {
+        if (data.state == 3) {
+            setisplaying(false)
+        }
+        else if (data.state == 2) {
+            setisplaying(true)
+        }
+    })
+
+
     const skiptonext = async () => {
-        try {
-            await TrackPlayer.skipToNext();
-            await TrackPlayer.play();
-            let trackdata = await TrackPlayer.getQueue()
-            let track = trackdata[await TrackPlayer.getCurrentTrack()]
-            getactivesong()
-
-            AsyncStorage.setItem("activesong", JSON.stringify(track))
-
-        }
-        catch (error) {
-            console.log(error)
-        }
-
-
+        await TrackPlayer.skipToNext()
+        getActiveSong()
     }
-
 
     const skiptoprevious = async () => {
-        try {
-            await TrackPlayer.skipToPrevious();
-            await TrackPlayer.play();
-            let trackdata = await TrackPlayer.getQueue()
-            let track = trackdata[await TrackPlayer.getCurrentTrack()]
-            getactivesong()
-
-            AsyncStorage.setItem("activesong", JSON.stringify(track))
-
-        }
-        catch (error) {
-            console.log(error)
-        }
-
-
+        await TrackPlayer.skipToPrevious()
+        getActiveSong()
     }
+
 
     return (
         <View style={styles.container}>
@@ -146,9 +86,8 @@ const MusicPlayer = ({ navigation }) => {
             {
                 activesong ?
                     <View style={styles.container}>
-                        <Animated.Image source={musicimg} style={[styles.imgbig,
-                        { transform: [{ rotate: RotateData }] }
-                        ]} />
+
+                        <Image source={musicimg} style={styles.imgbig} />
                         <View style={styles.container2}>
                             <Text style={styles.text1}>{activesong?.title}</Text>
                             <Text style={styles.text2}>{activesong?.artistname}</Text>
@@ -173,8 +112,18 @@ const MusicPlayer = ({ navigation }) => {
                                 }
                             />
                             {
-                                isplaying == false ? <AntDesign name="play" size={50} color="black" style={styles.icon} onPress={() => playpausesong()} />
-                                    : <MaterialIcons name="pause-circle-filled" size={60} style={styles.icon} onPress={() => playpausesong()} />
+                                isplaying == false ? <AntDesign name="play" size={50} color="black" style={styles.icon} onPress={
+                                    () => {
+                                        TrackPlayer.play()
+                                        setisplaying(true)
+                                        AsyncStorage.setItem('isplaying_localstorage', 'true')
+                                    }
+                                } />
+                                    : <MaterialIcons name="pause-circle-filled" size={60} style={styles.icon} onPress={() => {
+                                        TrackPlayer.pause()
+                                        setisplaying(false)
+                                        AsyncStorage.setItem('isplaying_localstorage', 'false')
+                                    }} />
                             }
                             <MaterialCommunityIcons name="skip-next" size={50} color="black" style={styles.icon}
                                 onPress={
