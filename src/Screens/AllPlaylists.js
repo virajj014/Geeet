@@ -36,7 +36,6 @@ const AllPlaylists = ({ navigation }) => {
 
 
 
-
     // console.log(oldPlaylists);
     const [keyword, setKeyword] = useState('');
     // console.log(keyword)
@@ -51,11 +50,10 @@ const AllPlaylists = ({ navigation }) => {
     }
 
     const activeplaylist = useSelector(state => state.activeplaylist_global)
-    // console.log("active playlist", activeplaylist)
-    const isplayingplaylist = useSelector(state => state.isplayingplaylist_global)
+
 
     const setactiveplaylist = async (item) => {
-        dispatch(setIsPlayingPlaylist_global(true))
+
         dispatch(setActivePlaylist_global(item))
         AsyncStorage.setItem('active_playlist', JSON.stringify(item));
         dispatch(setIsPlayingMusicOrPlaylist_global('playlist'))
@@ -69,14 +67,15 @@ const AllPlaylists = ({ navigation }) => {
 
         await TrackPlayer.removeUpcomingTracks();
         await TrackPlayer.add(data);
-        await TrackPlayer.getQueue().then((data) => {
-            console.log("queue", data)
-        })
+        // await TrackPlayer.getQueue().then((data) => {
+        //     console.log("queue", data)
+        // })
+        await TrackPlayer.play();
     }
 
 
     const playpauseplaylist = async (item) => {
-        dispatch(setIsPlayingPlaylist_global(!isplayingplaylist))
+
         dispatch(setIsPlaying_global(false))  // for music
         dispatch(setIsPlayingMusicOrPlaylist_global('playlist'))
         AsyncStorage.setItem('isplayingmusicorplaylist', JSON.stringify('playlist'));
@@ -86,10 +85,24 @@ const AllPlaylists = ({ navigation }) => {
 
         await TrackPlayer.removeUpcomingTracks();
         await TrackPlayer.add(data);
-        await TrackPlayer.getQueue().then((data) => {
-            console.log("queue", data)
-        })
+        // await TrackPlayer.getQueue().then((data) => {
+        //     // console.log("queue", data)
+        // })
+
     }
+
+
+    const [isplaying, setisplaying] = useState(false)
+
+    TrackPlayer.addEventListener('playback-state', async (state) => {
+
+        if (state.state == 2) {
+            setisplaying(true)
+        }
+        else {
+            setisplaying(false)
+        }
+    })
 
     return (
         <View style={styles.container}>
@@ -131,7 +144,7 @@ const AllPlaylists = ({ navigation }) => {
                                                         </Text>
                                                 }
                                                 {
-                                                    isplayingplaylist == true ?
+                                                    isplaying == true ?
                                                         <MaterialIcons name="pause-circle-filled" size={40} style={styles.icon2} onPress={
                                                             () => {
                                                                 playpauseplaylist(item)
